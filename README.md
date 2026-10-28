@@ -16,7 +16,7 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-a78bfa?style=flat-square)](CONTRIBUTING.md)
 [![GitHub stars](https://img.shields.io/github/stars/Bhanuteja005/openprospect?style=flat-square&color=0b1220)](https://github.com/Bhanuteja005/openprospect/stargazers)
 
-[Why](#why-openprospect) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Daily use](#your-15-minutes-a-day) · [Commands](#commands) · [Server](#run-it-on-a-server) · [Structure](#repository-structure) · [FAQ](#faq) · [Stars](#star-history) · [Docs](docs/README.md)
+[Why](#why-openprospect) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Daily use](#your-15-minutes-a-day) · [Commands](#commands) · [Server](#run-it-on-a-server) · [Structure](#repository-structure) · [FAQ](#faq) · [Docs](docs/README.md)
 
 <code>git clone https://github.com/Bhanuteja005/openprospect && cd openprospect && bash scripts/install.sh</code>
 
@@ -24,7 +24,24 @@
 
 <img src="docs/assets/pipeline.svg" alt="OpenProspect: two daily tracks. Find clients: sources, enrich, verify, score, CRM and email sequence, with replies flowing back. Find work: job boards, fit filter, who to email, AI writes, safe send." width="1000" />
 
+<br /><br />
+
+<table aria-label="OpenProspect community">
+<tr>
+<td align="center" width="360">
+  <a href="https://github.com/Bhanuteja005/openprospect/discussions">
+    <strong>Join the OpenProspect community</strong>
+  </a><br />
+  <sub>GitHub Discussions · Q&amp;A · Ideas · Show and tell</sub>
+</td>
+</tr>
+</table>
+
 </div>
+
+> [!IMPORTANT]
+> OpenProspect sends real email from your own inbox. Nothing goes out until you add your postal address, and every campaign starts as a draft until you switch on `auto_send`. Read [Responsible use](#responsible-use) before you choose your markets.
+> Get it only from [Bhanuteja005/openprospect](https://github.com/Bhanuteja005/openprospect). A copied README or a similar repository name doesn't make a download official.
 
 ---
 
@@ -35,7 +52,7 @@ It has two tracks, and you can use either one or both:
 - **Find clients.** It scrapes local businesses from Google Maps, plus remote-friendly companies and Reddit posts from people asking to hire help. It reads each business's website for real problems you could fix, such as a broken security certificate, a slow or non-mobile site, or no online booking. It then verifies the email address, scores the lead from 0 to 100, puts it in a CRM, and sends a 3-email sequence that opens with what it found. Once you switch on automatic sending, each email is scheduled for the business's working hours (US leads: Eastern or Central time).
 - **Find work.** It collects fresh remote and freelance job postings that match your skills and location, and finds the right person to email under strict rules. An AI writes each email individually from your own profile, and the email goes out once.
 
-It's the glue code around [seven excellent open-source projects](#credits). Each one does a single job well.
+It ties together proven open-source tools for scraping, email verification, sending and CRM, so each part does one job well.
 
 ## Why OpenProspect
 
@@ -221,17 +238,6 @@ sources  enrich  verify  scoring   mail     crm    jobs
 
 Each package has its own README (for example [packages/enrich](packages/enrich/README.md)). The design is explained in [docs/architecture.md](docs/architecture.md).
 
-## Responsible use
-
-B2B cold email is allowed in many countries, under conditions: it has to be relevant, honest, identify you and be easy to stop. Some recipients need consent first, for example sole traders in the UK (PECR) and anyone in Canada (CASL). Read [docs/responsible-use.md](docs/responsible-use.md) before choosing your markets. OpenProspect is built for the cautious path:
-
-- Nothing is sent until you set your postal address, and every email carries it.
-- Every email offers an opt-out by reply. Opt-outs and bounces are never emailed again.
-- Volumes stay human, and nothing is sent automatically until you switch it on.
-- Reddit posts are never answered automatically.
-
-You are still responsible for following the law where you and your recipients are. This is not legal advice.
-
 ## FAQ
 
 <details>
@@ -288,37 +294,32 @@ With the defaults (15 searches, depth 2), expect a few hundred places per run. H
 | [Troubleshooting](docs/troubleshooting.md) | When something doesn't work |
 | [Responsible use](docs/responsible-use.md) | The law, deliverability, the safeguards |
 
+## Star history
+
+Thanks to everyone using OpenProspect, reporting bugs, suggesting lead sources and sending fixes. If it finds you a client or a job, a star helps the next freelancer find it too.
+
+<a href="https://www.star-history.com/?repos=Bhanuteja005%2Fopenprospect&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Bhanuteja005/openprospect&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Bhanuteja005/openprospect&amp;type=date" />
+    <img alt="OpenProspect GitHub star history" src="https://api.star-history.com/chart?repos=Bhanuteja005/openprospect&amp;type=date" />
+  </picture>
+</a>
+
+## Responsible use
+
+B2B cold email is allowed in many countries, under conditions: it has to be relevant, honest, identify you and be easy to stop. Some recipients need consent first, for example sole traders in the UK (PECR) and anyone in Canada (CASL). Read [docs/responsible-use.md](docs/responsible-use.md) before choosing your markets. OpenProspect is built for the cautious path:
+
+- Nothing is sent until you set your postal address, and every email carries it.
+- Every email offers an opt-out by reply. Opt-outs and bounces are never emailed again.
+- Volumes stay human, and nothing is sent automatically until you switch it on.
+- Reddit posts are never answered automatically.
+
+You are still responsible for following the law where you and your recipients are. This is not legal advice.
+
 ## Contributing
 
 Contributions are welcome: new lead sources, new pain points, new job boards, translations of the email templates, docs and bug fixes. Start with [CONTRIBUTING.md](CONTRIBUTING.md). It covers the dev setup (`uv sync`, `uv run pytest`, `uv run ruff check .`) and the package boundaries. Please also read the [Code of Conduct](CODE_OF_CONDUCT.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
-
-## Credits
-
-OpenProspect stands on the shoulders of these projects. Please star them too.
-
-| Project | Its job in OpenProspect |
-| --- | --- |
-| [gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper) | Scrapes businesses from Google Maps: name, phone, website, rating, reviews, emails |
-| [huginn/huginn](https://github.com/huginn/huginn) | Watches Reddit every hour for people asking to hire help |
-| [firecrawl/firecrawl](https://github.com/firecrawl/firecrawl) | Optional: reads JavaScript-heavy sites and sites that block simple requests |
-| [reacherhq/check-if-email-exists](https://github.com/reacherhq/check-if-email-exists) | Checks that an inbox exists before anything is sent |
-| [remoteintech/remote-jobs](https://github.com/remoteintech/remote-jobs) | ~900 remote-friendly companies as B2B leads |
-| [knadh/listmonk](https://github.com/knadh/listmonk) | Sends the email sequence through your own inbox, at a safe speed |
-| [twentyhq/twenty](https://github.com/twentyhq/twenty) | The CRM: every lead, deal, stage and note on one board |
-
-The job track reads public data from Hacker News (Algolia API), Remotive, Remote OK, Himalayas, We Work Remotely, Jobicy and Working Nomads. AI writing uses [Claude Code](https://claude.com/claude-code), and optional local first lines use [Ollama](https://ollama.com).
-
-## Star history
-
-If OpenProspect finds you a client or a job, a star helps the next freelancer find it too.
-
-<a href="https://www.star-history.com/#Bhanuteja005/openprospect&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date" />
-    <img alt="OpenProspect GitHub star history" src="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date" />
-  </picture>
-</a>
 
 ## License
 
