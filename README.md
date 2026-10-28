@@ -16,7 +16,7 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-a78bfa?style=flat-square)](CONTRIBUTING.md)
 [![GitHub stars](https://img.shields.io/github/stars/Bhanuteja005/openprospect?style=flat-square&color=0b1220)](https://github.com/Bhanuteja005/openprospect/stargazers)
 
-[Why](#why-openprospect) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Daily use](#your-15-minutes-a-day) · [Commands](#commands) · [Server](#run-it-on-a-server) · [Structure](#repository-structure) · [FAQ](#faq) · [Docs](docs/README.md)
+[Why](#why-openprospect) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Daily use](#your-15-minutes-a-day) · [Commands](#commands) · [Server](#run-it-on-a-server) · [Structure](#repository-structure) · [FAQ](#faq) · [Stars](#star-history) · [Docs](docs/README.md)
 
 <code>git clone https://github.com/Bhanuteja005/openprospect && cd openprospect && bash scripts/install.sh</code>
 
@@ -307,6 +307,18 @@ OpenProspect stands on the shoulders of these projects. Please star them too.
 | [twentyhq/twenty](https://github.com/twentyhq/twenty) | The CRM: every lead, deal, stage and note on one board |
 
 The job track reads public data from Hacker News (Algolia API), Remotive, Remote OK, Himalayas, We Work Remotely, Jobicy and Working Nomads. AI writing uses [Claude Code](https://claude.com/claude-code), and optional local first lines use [Ollama](https://ollama.com).
+
+## Star history
+
+If OpenProspect finds you a client or a job, a star helps the next freelancer find it too.
+
+<a href="https://www.star-history.com/#Bhanuteja005/openprospect&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date" />
+    <img alt="OpenProspect GitHub star history" src="https://api.star-history.com/svg?repos=Bhanuteja005/openprospect&type=Date" />
+  </picture>
+</a>
 
 ## License
 
