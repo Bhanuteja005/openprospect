@@ -1,0 +1,1 @@
+"""The openprospect CLI app."""

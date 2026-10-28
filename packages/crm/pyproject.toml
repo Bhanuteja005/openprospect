@@ -1,0 +1,18 @@
+[project]
+name = "openprospect-crm"
+version = "0.1.0"
+description = "Twenty CRM client and sync: companies, contacts, deals and notes."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "openprospect-core",
+    "requests>=2.32",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openprospect"]

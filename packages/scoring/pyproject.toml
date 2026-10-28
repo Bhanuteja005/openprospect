@@ -1,0 +1,18 @@
+[project]
+name = "openprospect-scoring"
+version = "0.1.0"
+description = "Lead scoring (0-100, tiers A/B/C) and the personalised first line of each email."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "openprospect-core",
+    "requests>=2.32",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openprospect"]

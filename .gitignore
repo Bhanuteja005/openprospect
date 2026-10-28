@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Secrets and personal config (created by `openprospect init` from the *.example files) ---
+.env
+.env.*
+!.env.example
+config/settings.yaml
+config/queries.txt
+config/profile.md
+
+# --- Runtime data: leads database, scrapes, drafts, logs, caches ---
+data/
+*.log
+drafts.json
+candidates.json
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

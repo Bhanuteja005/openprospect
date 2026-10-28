@@ -1,0 +1,9 @@
+data/
+.env
+.venv/
+.git/
+**/__pycache__/
+*.pyc
+config/settings.yaml
+config/queries.txt
+config/profile.md

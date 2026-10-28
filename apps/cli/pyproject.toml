@@ -1,0 +1,28 @@
+[project]
+name = "openprospect"
+version = "0.1.0"
+description = "Self-hosted, open-source prospecting and cold outreach: scrape leads, verify emails, score, send, track replies."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+keywords = ["cold-email", "lead-generation", "outreach", "google-maps-scraper", "crm", "freelance", "self-hosted"]
+dependencies = [
+    "openprospect-core",
+    "openprospect-sources",
+    "openprospect-enrich",
+    "openprospect-verify",
+    "openprospect-scoring",
+    "openprospect-mail",
+    "openprospect-crm",
+    "openprospect-jobs",
+]
+
+[project.scripts]
+openprospect = "openprospect.cli.main:main"
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openprospect"]

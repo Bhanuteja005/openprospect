@@ -1,0 +1,52 @@
+# OpenProspect workspace root.
+#
+# A uv workspace: one lockfile, one virtualenv, many packages.
+#   apps/cli        the `openprospect` command (the only thing users run)
+#   packages/*      libraries with one job each, all under the `openprospect.*` namespace
+#
+#   uv sync                 install everything (editable) into .venv
+#   uv run openprospect     run the CLI
+#   uv run pytest           run every package's tests
+
+[project]
+name = "openprospect-workspace"
+version = "0.1.0"
+description = "OpenProspect monorepo root (not published)"
+requires-python = ">=3.11"
+dependencies = ["openprospect"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["apps/*", "packages/*"]
+
+[tool.uv.sources]
+openprospect = { workspace = true }
+openprospect-core = { workspace = true }
+openprospect-sources = { workspace = true }
+openprospect-enrich = { workspace = true }
+openprospect-verify = { workspace = true }
+openprospect-scoring = { workspace = true }
+openprospect-mail = { workspace = true }
+openprospect-crm = { workspace = true }
+openprospect-jobs = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "apps"]
+addopts = "-q --import-mode=importlib"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["openprospect"]

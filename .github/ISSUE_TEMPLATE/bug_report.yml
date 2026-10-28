@@ -1,0 +1,45 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please remove email addresses, API keys and lead data from anything you paste.
+        Security problems: use the Security tab's private reporting instead of an issue.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: The command you ran and its output (from the terminal or data/logs/).
+      render: text
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`openprospect doctor` output"
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: OpenProspect version / commit
+      placeholder: "0.1.0 or a commit hash"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: ["Windows", "macOS", "Linux", "Linux server / VPS", "Other"]
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options: ["Scraping (Google Maps)", "Enrich", "Verify", "Scoring / copy", "Sending (Listmonk)", "Replies (IMAP)", "CRM (Twenty)", "Buyer intent (Huginn)", "Job & freelance track", "Docker / setup", "Docs"]

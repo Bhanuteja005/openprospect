@@ -1,0 +1,19 @@
+[project]
+name = "openprospect-core"
+version = "0.1.0"
+description = "Shared foundation: workspace paths, .env + settings.yaml, the SQLite lead store, text helpers."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.32",
+    "PyYAML>=6.0",
+    "tzdata>=2024.1",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openprospect"]

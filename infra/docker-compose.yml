@@ -1,0 +1,291 @@
+# OpenProspect: every service in one file.
+#
+#   openprospect up                     -> core: CRM, email sender, email checker, intent watcher
+#   openprospect up --firecrawl         -> also starts Firecrawl (needs ~4 GB more RAM)
+#   (or by hand, from the repo root:  docker compose -f infra/docker-compose.yml --env-file .env up -d)
+#   --env-file .env matters: without it Compose looks for infra/.env and every password is blank.
+#
+# Profiles:
+#   firecrawl  Firecrawl website reader (optional, heavy)
+#   mapsui     the Google Maps scraper's own web UI (optional)
+#   runner     the OpenProspect CLI itself, running the daily jobs on a server (`openprospect daemon`)
+#
+# The Google Maps scraper is not a long-running service: the pipeline starts it on demand
+# with `docker run` (see packages/sources/src/openprospect/sources/google_maps.py).
+#
+# Ports on the host (override any of them in .env):
+#   Twenty CRM ........ http://localhost:3740   TWENTY_PORT
+#   Listmonk .......... http://localhost:3741   LISTMONK_PORT
+#   Reacher (verify) .. http://localhost:3742   REACHER_PORT
+#   Huginn ............ http://localhost:3743   HUGINN_PORT
+#   Firecrawl ......... http://localhost:3744   FIRECRAWL_PORT   (profile: firecrawl)
+#   Maps scraper UI ... http://localhost:3745   MAPS_UI_PORT     (profile: mapsui)
+#
+# Every port is published on 127.0.0.1 only (BIND_ADDRESS). To reach the services from other
+# machines set BIND_ADDRESS=0.0.0.0, but only behind a firewall or a reverse proxy with auth:
+# Reacher has no authentication and Twenty's sign-up page is open.
+#
+# Image tags: every image can be pinned in .env (TWENTY_TAG, LISTMONK_TAG, REACHER_TAG, HUGINN_TAG,
+# FIRECRAWL_TAG, MAPS_SCRAPER_TAG). They default to `latest`; pin these for production.
+#
+# Running on a server with a domain? Set TWENTY_SERVER_URL and HUGINN_DOMAIN in .env.
+
+name: openprospect
+
+services:
+  # ---------------- Twenty: CRM (https://github.com/twentyhq/twenty) ----------------
+  twenty-server:
+    image: twentycrm/twenty:${TWENTY_TAG:-latest}
+    volumes:
+      - twenty-local-data:/app/packages/twenty-server/.local-storage
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${TWENTY_PORT:-3740}:3000"
+    environment: &twenty-env
+      NODE_PORT: 3000
+      PG_DATABASE_URL: postgres://postgres:${TWENTY_DB_PASSWORD}@twenty-db:5432/default
+      SERVER_URL: ${TWENTY_SERVER_URL:-http://localhost:${TWENTY_PORT:-3740}}
+      REDIS_URL: redis://twenty-redis:6379
+      STORAGE_TYPE: local
+      ENCRYPTION_KEY: ${TWENTY_ENCRYPTION_KEY}
+      APP_SECRET: ${TWENTY_ENCRYPTION_KEY}
+    depends_on:
+      twenty-db:
+        condition: service_healthy
+      twenty-redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:3000/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  twenty-worker:
+    image: twentycrm/twenty:${TWENTY_TAG:-latest}
+    volumes:
+      - twenty-local-data:/app/packages/twenty-server/.local-storage
+    command: ["yarn", "worker:prod"]
+    environment:
+      <<: *twenty-env
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+    depends_on:
+      twenty-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+  twenty-db:
+    image: postgres:16
+    volumes:
+      - twenty-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: default
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${TWENTY_DB_PASSWORD}
+    healthcheck:
+      test: pg_isready -U postgres -h localhost -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  twenty-redis:
+    image: redis:7-alpine
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ---------------- Listmonk: email sequences (https://github.com/knadh/listmonk) ----------------
+  listmonk:
+    image: listmonk/listmonk:${LISTMONK_TAG:-latest}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${LISTMONK_PORT:-3741}:9000"
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__host: listmonk-db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: 25
+      LISTMONK_db__max_idle: 25
+      LISTMONK_db__max_lifetime: 300s
+      TZ: ${TZ:-UTC}
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER:-admin}
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD}
+    depends_on:
+      listmonk-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  listmonk-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD}
+      POSTGRES_DB: listmonk
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    volumes:
+      - listmonk-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ---------------- Reacher: does this inbox exist? (https://github.com/reacherhq/check-if-email-exists) ----------------
+  # Needs outbound port 25. Many home ISPs and cloud hosts block it; `openprospect doctor` tests it.
+  # If it is blocked, the pipeline falls back to a free syntax + MX (mail server) check.
+  reacher:
+    image: reacherhq/backend:${REACHER_TAG:-latest}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${REACHER_PORT:-3742}:8080"
+    environment:
+      RCH__HELLO_NAME: ${REACHER_HELLO_NAME:-localhost}
+      RCH__FROM_EMAIL: ${REACHER_FROM_EMAIL:-hello@localhost}
+    restart: unless-stopped
+
+  # ---------------- Huginn: Reddit buyer-intent watcher (https://github.com/huginn/huginn) ----------------
+  huginn:
+    image: ghcr.io/huginn/huginn:${HUGINN_TAG:-latest}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HUGINN_PORT:-3743}:3000"
+    environment:
+      SEED_USERNAME: ${HUGINN_USERNAME:-admin}
+      SEED_PASSWORD: ${HUGINN_PASSWORD}
+      TIMEZONE: ${HUGINN_TIMEZONE:-UTC}
+      DOMAIN: ${HUGINN_DOMAIN:-localhost:${HUGINN_PORT:-3743}}
+    volumes:
+      - huginn-mysql:/var/lib/mysql
+    restart: unless-stopped
+
+  # ---------------- Google Maps scraper web UI (optional) ----------------
+  maps-ui:
+    profiles: ["mapsui"]
+    image: gosom/google-maps-scraper:${MAPS_SCRAPER_TAG:-latest}
+    command: ["-data-folder", "/gmapsdata"]
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${MAPS_UI_PORT:-3745}:8080"
+    volumes:
+      - ../data/maps-ui:/gmapsdata
+    restart: unless-stopped
+
+  # ---------------- Firecrawl: read JavaScript-heavy websites (optional, heavy) ----------------
+  firecrawl-api:
+    profiles: ["firecrawl"]
+    image: ghcr.io/firecrawl/firecrawl:${FIRECRAWL_TAG:-latest}
+    command: node dist/src/harness.js --start-docker
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${FIRECRAWL_PORT:-3744}:3002"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: 3002
+      ENV: local
+      USE_DB_AUTHENTICATION: "false"
+      REDIS_URL: redis://firecrawl-redis:6379
+      REDIS_RATE_LIMIT_URL: redis://firecrawl-redis:6379
+      PLAYWRIGHT_MICROSERVICE_URL: http://firecrawl-playwright:3000/scrape
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: firecrawl-nuq-postgres
+      POSTGRES_PORT: 5432
+      NUQ_RABBITMQ_URL: amqp://firecrawl-rabbitmq:5672
+      NUM_WORKERS_PER_QUEUE: 2
+      CRAWL_CONCURRENT_REQUESTS: 4
+      MAX_CONCURRENT_JOBS: 2
+      BROWSER_POOL_SIZE: 2
+      HARNESS_STARTUP_TIMEOUT_MS: 120000
+    ulimits:
+      nofile: { soft: 65535, hard: 65535 }
+    depends_on:
+      firecrawl-redis: { condition: service_started }
+      firecrawl-playwright: { condition: service_started }
+      firecrawl-rabbitmq: { condition: service_healthy }
+      firecrawl-nuq-postgres: { condition: service_healthy }
+    mem_limit: 3G
+    restart: unless-stopped
+
+  firecrawl-playwright:
+    profiles: ["firecrawl"]
+    image: ghcr.io/firecrawl/playwright-service:${FIRECRAWL_TAG:-latest}
+    environment:
+      PORT: 3000
+      BLOCK_MEDIA: "true"
+      MAX_CONCURRENT_PAGES: 4
+    mem_limit: 2G
+    restart: unless-stopped
+
+  firecrawl-redis:
+    profiles: ["firecrawl"]
+    image: redis:alpine
+    command: redis-server --bind 0.0.0.0
+    restart: unless-stopped
+
+  firecrawl-rabbitmq:
+    profiles: ["firecrawl"]
+    image: rabbitmq:3-management
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  firecrawl-nuq-postgres:
+    profiles: ["firecrawl"]
+    image: ghcr.io/firecrawl/nuq-postgres:${FIRECRAWL_TAG:-latest}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  # ---------------- OpenProspect runner: the daily jobs on a server (optional) ----------------
+  # docker compose -f infra/docker-compose.yml --env-file .env --profile runner up -d
+  #
+  # Runs `openprospect daemon`, which runs the daily jobs at the times set in settings.yaml,
+  # in this container's time zone: TZ from .env (UTC unless you change it).
+  # The Google Maps scraper is started through the host's Docker (the mounted socket), so
+  # OPENPROSPECT_HOST_DATA_DIR in .env MUST be the HOST's absolute path to this repo's data/
+  # folder, e.g. /srv/openprospect/data. Without it the scraper writes into a path the host can't see.
+  openprospect:
+    profiles: ["runner"]
+    build:
+      context: ..
+      dockerfile: apps/cli/Dockerfile
+    env_file:
+      - path: ../.env
+        required: false   # lets `openprospect init` run in this container before .env exists
+    volumes:
+      - ..:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      OPENPROSPECT_HOME: /workspace
+      OPENPROSPECT_HOST_DATA_DIR: ${OPENPROSPECT_HOST_DATA_DIR:-}
+      TWENTY_URL: http://twenty-server:3000
+      LISTMONK_URL: http://listmonk:9000
+      REACHER_URL: http://reacher:8080
+      HUGINN_URL: http://huginn:3000
+      FIRECRAWL_URL: http://firecrawl-api:3002
+    command: ["openprospect", "daemon"]
+    restart: unless-stopped
+
+volumes:
+  twenty-local-data:
+  twenty-db-data:
+  listmonk-db-data:
+  huginn-mysql:

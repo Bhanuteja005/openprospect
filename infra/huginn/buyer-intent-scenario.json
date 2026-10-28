@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "name": "OpenProspect - Buyer Intent",
+  "description": "Watches Reddit for people asking to hire a website / marketing / automation person, filters the real requests, and publishes them as a feed that OpenProspect pushes into Twenty CRM.",
+  "source_url": false,
+  "guid": "0pe9r05pec700000000000000000b1ce",
+  "tag_fg_color": "#ffffff",
+  "tag_bg_color": "#d9534f",
+  "icon": "fire",
+  "exported_at": "2026-10-23T12:00:00Z",
+  "agents": [
+    {
+      "type": "Agents::RssAgent",
+      "name": "Reddit - hiring posts",
+      "disabled": false,
+      "guid": "0pe9r05pec7000000000000000000a01",
+      "options": {
+        "expected_update_period_in_days": "2",
+        "clean": "true",
+        "user_agent": "Mozilla/5.0 (compatible; intent-watcher/1.0)",
+        "max_events_per_run": "50",
+        "url": [
+          "https://www.reddit.com/r/forhire/new/.rss",
+          "https://www.reddit.com/r/hiring/new/.rss",
+          "https://www.reddit.com/r/freelance_forhire/new/.rss",
+          "https://www.reddit.com/r/slavelabour/new/.rss",
+          "https://www.reddit.com/r/smallbusiness/search.rss?q=website+OR+marketing+OR+developer&restrict_sr=1&sort=new",
+          "https://www.reddit.com/r/Entrepreneur/search.rss?q=%22looking+for%22+developer+OR+agency+OR+website&restrict_sr=1&sort=new",
+          "https://www.reddit.com/r/startups/search.rss?q=%22looking+for%22+developer+OR+agency&restrict_sr=1&sort=new",
+          "https://www.reddit.com/r/shopify/search.rss?q=hire+OR+%22looking+for%22&restrict_sr=1&sort=new",
+          "https://www.reddit.com/r/wordpress/search.rss?q=hire+OR+%22looking+for%22&restrict_sr=1&sort=new"
+        ]
+      },
+      "schedule": "every_1h",
+      "keep_events_for": 1209600,
+      "propagate_immediately": false
+    },
+    {
+      "type": "Agents::TriggerAgent",
+      "name": "Filter - real buyers only",
+      "disabled": false,
+      "guid": "0pe9r05pec7000000000000000000a02",
+      "options": {
+        "expected_receive_period_in_days": "2",
+        "keep_event": "true",
+        "rules": [
+          {
+            "type": "regex",
+            "value": "(\\[hiring\\]|\\[task\\]|\\[paid\\]|looking for|need(ed|ing)? (a|an|someone|help)|hire|seeking|recommend(ation)?s? for|who can (build|make|help))",
+            "path": "$.title"
+          },
+          {
+            "type": "regex",
+            "value": "(website|web ?site|landing page|web ?dev|developer|designer|wordpress|shopify|wix|webflow|seo|google ads|facebook ads|meta ads|marketing|lead gen|automation|chatbot|ai agent|crm|app|ecommerce|e-commerce)",
+            "path": "$.title"
+          },
+          {
+            "type": "!regex",
+            "value": "(\\[for hire\\]|for hire|\\[offer\\]|portfolio|i will|available for)",
+            "path": "$.title"
+          }
+        ]
+      },
+      "keep_events_for": 1209600,
+      "propagate_immediately": true
+    },
+    {
+      "type": "Agents::DataOutputAgent",
+      "name": "Buyer intent feed",
+      "disabled": false,
+      "guid": "0pe9r05pec7000000000000000000a03",
+      "options": {
+        "secrets": ["openprospect-intent"],
+        "expected_receive_period_in_days": "3",
+        "events_to_show": "100",
+        "template": {
+          "title": "Buyer intent",
+          "description": "People asking to hire help right now",
+          "item": {
+            "title": "{{title}}",
+            "description": "{{description | strip_html | truncate: 1500}}",
+            "link": "{{url}}",
+            "pubDate": "{{date_published}}",
+            "author": "{{authors | join: ', '}}"
+          }
+        }
+      },
+      "keep_events_for": 1209600,
+      "propagate_immediately": false
+    }
+  ],
+  "links": [
+    { "source": 0, "receiver": 1 },
+    { "source": 1, "receiver": 2 }
+  ],
+  "control_links": []
+}

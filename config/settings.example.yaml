@@ -1,0 +1,279 @@
+# ============================================================
+#  OpenProspect settings
+#
+#  `openprospect init` copies this file to config/settings.yaml (git-ignored).
+#  Edit config/settings.yaml, never this example.
+# ============================================================
+
+# ---------------- Who you are ----------------
+agency:
+  name: ""                           # your agency / studio / brand, e.g. "Rivera Studio"
+  sender_name: ""                    # who the email is from, e.g. "Alex Rivera"
+  intro: ""                          # one sentence after the first line of email 1 ([[SENDER_INTRO]]),
+                                     # e.g. "I'm Alex, a web developer." `doctor` flags it while empty
+  website: ""                        # e.g. "https://yourstudio.com" (shown as plain text in emails)
+  # A physical postal address in every cold email is REQUIRED by US law (CAN-SPAM) and expected
+  # in most countries. Nothing is sent until this is set.
+  postal_address: ""                 # e.g. "123 Main St, Suite 4, Austin, TX 78701, USA"
+  calendar_link: ""                  # optional, e.g. a free Cal.com / Calendly link
+  currency: "USD"                    # deal values in the CRM
+  phone_country: "US"                # default country for local phone numbers (ISO code)
+  phone_calling_code: "+1"           # its dialling code
+
+# What you sell, one full sentence per problem found on a lead's website.
+# It follows your intro line in email 1. Write these in your own words.
+offers:
+  no_website:       "I build simple, fast websites for local businesses that turn Google searches into calls and bookings."
+  site_down:        "I can get it back online quickly and make sure it stays up."
+  bad_ssl:          "It's usually a quick fix, and I can sort it out for you."
+  no_https:         "It's a quick fix, and I can sort it out for you."
+  ssl_expiring:     "Renewing it and setting it to auto-renew is a quick fix, and I can do it for you."
+  old_tls:          "It's a server setting I can update quickly, without any downtime."
+  outdated_wordpress: "I can update it safely and fix anything that breaks, or move you to a faster, modern site."
+  old_php:          "I can move the site to a current, supported setup without any downtime."
+  old_jquery:       "It's a small update, and I can do it as part of a quick security tune-up."
+  no_https_redirect: "It's a 10-minute fix, and I can sort it out for you."
+  mixed_content:    "It's usually a quick fix, and I can clean it up for you."
+  not_mobile:       "I build mobile-friendly sites that turn phone visitors into calls and bookings."
+  slow_site:        "I make sites load in under 2 seconds so visitors stay and book."
+  outdated_site:    "I build modern, fast websites for local businesses that bring in more calls and bookings."
+  no_booking:       "I set up online booking with instant auto-replies, so enquiries come in 24/7."
+  no_analytics:     "I set up simple tracking and lead capture so you can see exactly what brings in customers."
+  low_rating:       "I set up an automatic review-request system that steadily lifts your Google rating."
+  default:          "I build fast websites and custom web apps for growing businesses, from online booking to customer portals."
+
+# ---------------- Lead scraping (Google Maps) ----------------
+scrape:
+  image: "gosom/google-maps-scraper"   # Docker image; pin a tag here if you want reproducible runs
+  depth: 2            # how far to scroll each search (1 = ~20 results, 10 = ~120+)
+  concurrency: 1      # parallel browser jobs. Keep low on small machines (4 GB Docker)
+  extract_emails: true
+  language: "en"
+  exit_on_inactivity: "3m"
+  max_queries_per_run: 15  # roughly an hour of scraping
+  # When config/queries.txt runs out, new searches are generated automatically:
+  # every niche x every city, rotating through countries. Add niches or cities any time.
+  auto_queries:
+    enabled: true
+    weights: { US: 2 }    # picks per round per country (others get 1)
+    niches: ["dentist", "cosmetic dentist", "orthodontist", "med spa", "plastic surgeon", "dermatologist",
+             "chiropractor", "physical therapy clinic", "personal injury lawyer", "family law attorney",
+             "real estate agent", "roofing contractor", "HVAC company", "plumber", "electrician",
+             "landscaping company", "home builder", "interior designer", "CPA firm", "veterinary clinic",
+             "fertility clinic", "hair transplant clinic", "wedding venue", "boutique hotel", "car dealership"]
+    cities:
+      US: ["Austin TX", "Dallas TX", "Houston TX", "San Antonio TX", "Phoenix AZ", "Scottsdale AZ", "Denver CO",
+           "Nashville TN", "Charlotte NC", "Raleigh NC", "Atlanta GA", "Tampa FL", "Orlando FL", "Miami FL",
+           "Columbus OH", "Indianapolis IN", "Kansas City MO", "Salt Lake City UT", "Boise ID", "Las Vegas NV",
+           "San Diego CA", "Sacramento CA", "Seattle WA", "Portland OR", "Chicago IL", "Minneapolis MN"]
+      GB: ["London UK", "Manchester UK", "Birmingham UK", "Leeds UK", "Bristol UK", "Glasgow UK",
+           "Edinburgh UK", "Liverpool UK", "Sheffield UK", "Nottingham UK", "Cardiff UK", "Newcastle UK"]
+      AU: ["Sydney Australia", "Melbourne Australia", "Brisbane Australia", "Perth Australia",
+           "Adelaide Australia", "Gold Coast Australia", "Canberra Australia"]
+
+# ---------------- Remote-friendly companies ----------------
+# B2B leads from github.com/remoteintech/remote-jobs (cloned into data/cache/ on first use).
+remote_companies:
+  company_sizes: ["tiny", "small"]   # small firms buy outside help; add "medium" for more
+  technologies_any: []               # e.g. ["wordpress", "shopify", "php"]. Empty = all
+  limit_per_run: 50                  # new companies per run
+
+# ---------------- Website enrichment ----------------
+enrich:
+  max_pages_per_site: 4         # homepage + contact/about pages
+  timeout_seconds: 15
+  slow_site_seconds: 4.0        # slower than this => "slow_site"
+  outdated_year_before: 2023    # (c) year older than this => "outdated_site"
+  per_run_limit: 700
+
+# ---------------- Email verification ----------------
+verify:
+  # Statuses allowed to receive email:
+  #   safe        - Reacher confirmed the inbox exists
+  #   risky       - catch-all / full inbox (Reacher)
+  #   site_mx_ok  - published on the business's own website and its mail server exists
+  #                 (the fallback when port 25 is blocked and Reacher can't check)
+  sendable_statuses: ["safe", "site_mx_ok"]
+  # Guess info@ / contact@ when none was found. Only kept if Reacher says "safe".
+  guess_role_emails: true
+  per_run_limit: 200
+  # Big chains: kept in the CRM, never emailed (head-office inboxes don't hire from cold email).
+  # Any website shared by 3+ listings is also treated as a chain automatically.
+  # Add the chains of your own market.
+  skip_chains: ["aspen dental", "heartland dental", "smile direct", "bupa", "mydentist", "specsavers",
+                "regus", "keller williams", "re/max", "coldwell banker", "century 21", "kumon",
+                "orangetheory", "anytime fitness", "planet fitness", "great clips", "supercuts",
+                "banfield", "vca animal", "jiffy lube", "midas", "starbucks", "mcdonald"]
+
+# ---------------- Lead scoring ----------------
+scoring:
+  # Category keyword => points (0-25). Higher = businesses that usually pay more.
+  category_points:
+    "plastic surgeon": 25
+    "cosmetic": 24
+    "dental": 25
+    "dentist": 25
+    "orthodont": 25
+    "law": 24
+    "lawyer": 24
+    "solicitor": 24
+    "attorney": 24
+    "personal injury": 25
+    "estate agent": 22
+    "real estate": 22
+    "realtor": 22
+    "property": 20
+    "med spa": 24
+    "aesthetic": 22
+    "dermatolog": 22
+    "skin": 18
+    "hair transplant": 24
+    "ivf": 25
+    "fertility": 25
+    "hospital": 20
+    "clinic": 20
+    "physiotherap": 16
+    "physical therapy": 16
+    "chiropract": 18
+    "veterinar": 16
+    "cpa": 18
+    "accountant": 18
+    "insurance": 18
+    "financial": 18
+    "home builder": 20
+    "contractor": 16
+    "construction": 18
+    "builder": 18
+    "roofing": 20
+    "hvac": 20
+    "solar": 20
+    "plumb": 16
+    "landscap": 16
+    "interior": 20
+    "architect": 18
+    "jewel": 22
+    "car dealer": 22
+    "auto": 15
+    "wedding": 18
+    "hotel": 18
+    "resort": 20
+    "luxury": 20
+    "school": 15
+    "academy": 14
+    "coaching": 12
+    "gym": 12
+    "fitness": 12
+    "spa": 14
+    "salon": 10
+    "furniture": 15
+    "restaurant": 8
+    "cafe": 6
+    "bakery": 6
+  default_category_points: 8
+  tiers:          # total score 0-100
+    A: 70         # hot, high-value: email first, call too
+    B: 50         # good
+    # below B => C (kept in the CRM, emailed last)
+  deal_value:     # estimated deal size per tier, shown in the CRM pipeline
+    A: 1500
+    B: 800
+    C: 300
+  min_tier_to_email: "C"    # A = only the best, B = A+B, C = everyone with a valid email
+
+# ---------------- Sending (Listmonk) ----------------
+sending:
+  # New inboxes get blocked fast if they send too much.
+  # Week 1: ~20/day, week 2: ~35/day, week 3+: ~50/day per inbox.
+  daily_limit: 20
+  # Who gets the new-lead slots first (follow-ups always go first).
+  # Canada is left out on purpose: CASL generally requires consent before commercial email.
+  # Read docs/responsible-use.md before adding it (or any other country).
+  country_priority: ["US", "GB", "AU", "NZ", "IE"]
+  # Cap some countries per day, e.g. { DE: 3 } = at most 3 new German businesses a day.
+  max_new_per_day_by_country: {}
+  # Lead sources never emailed by the agency sequence (they still get scored + go to the CRM),
+  # e.g. ["remote_companies"] if you only want to pitch local businesses.
+  skip_sources: []
+  # Warm-up for a new inbox: start low and add a few per day until daily_limit.
+  warmup_start_date: ""         # the day this inbox started cold emailing, e.g. "2026-11-01"
+  warmup_first_day: 15
+  warmup_add_per_day: 5
+  # Sequence: step 1 = intro, then follow-ups if no reply.
+  followup_after_days: [3, 5]   # step 2 after 3 days, step 3 five days after step 2
+  # Emails land in each business's own working hours: weekdays, between these local hours.
+  local_send_hours: [9, 16]
+  default_timezone: "UTC"
+  # false = campaigns are created as DRAFTS in Listmonk; you read them and press Start.
+  # true  = fully automatic. Switch on only after you've checked a few drafts.
+  auto_send: false
+  templates:
+    # Subjects: 2-4 words, lowercase, personal. Step 1 uses a per-business subject picked
+    # from the main problem found (see packages/scoring copy.py SUBJECTS).
+    1: { subject: "{{ .Subscriber.Attribs.subject }}", file: "templates/emails/email_1_intro.html" }
+    2: { subject: "one more idea for {{ .Subscriber.Attribs.short }}", file: "templates/emails/email_2_followup.html" }
+    3: { subject: "should I close this?", file: "templates/emails/email_3_breakup.html" }
+
+# ---------------- Buyer intent (Huginn) ----------------
+intent:
+  # The JSON feed URL of the "Buyer intent feed" agent in Huginn.
+  # `openprospect setup` fills this in for you.
+  huginn_feed_url: ""
+
+# ---------------- Optional free local AI (Ollama) ----------------
+# Install Ollama (https://ollama.com), run `ollama pull llama3.2`, set enabled: true.
+# The first line of each email is then written by the local model instead of templates.
+ai:
+  ollama_url: "http://localhost:11434"
+  model: "llama3.2"
+  enabled: false
+
+# ---------------- Schedule (`openprospect daemon`) ----------------
+# When the daemon starts each track, in the machine's local time zone. In the `runner`
+# container that is TZ from .env (UTC unless you change it). Keep the quotes.
+# Use cron / Task Scheduler instead if you prefer (scripts/schedule-*).
+schedule:
+  agency_time: "06:00"    # find + email businesses
+  jobs_time: "13:00"      # find + email companies that are hiring
+
+# ---------------- Job & freelance track ----------------
+# Finds fresh remote openings on public job boards (Hacker News "Who is hiring", Remotive,
+# Remote OK, Himalayas, We Work Remotely, Jobicy, Working Nomads), picks who to email,
+# has an AI write one email per company from config/profile.md, then sends them.
+jobs:
+  sender_name: ""             # the From name; empty = agency.sender_name. `jobs send` refuses if both are empty
+  max_age_days: 3              # only postings this fresh
+  recontact_days: 90           # never email the same company twice within this window
+  max_companies_per_day: 30    # no warm-up in this track: keep it at 20-30 on a fresh inbox
+  # Titles you want (regular-expression fragments, case-insensitive).
+  roles: ["full[- ]?stack", "front[- ]?end", "back[- ]?end", "software (engineer|developer)", "web developer",
+          "ai engineer", "ml engineer", "llm", "react", "next\\.?js", "node(\\.js)?", "python", "typescript",
+          "product engineer", "founding engineer"]
+  # Titles to skip even when a role above matches.
+  exclude_roles: ["sales", "account (executive|manager)", "marketing", "designer", "recruiter",
+                  "customer (success|support)", "support (engineer|specialist|agent)", "writer", "copywriter",
+                  "legal", "counsel", "accountant", "finance", "bookkeep", "data entry", "annotation", "annotator",
+                  "trainer", "tutor", "teacher", "nurse", "ios", "android", "embedded", "firmware", "hardware",
+                  "mechanical", "electrical", "salesforce", "sap", "qa", "tester", "manual test", "devops", "sre",
+                  "site reliability", "data engineer", "analytics", "data analyst", "security engineer",
+                  "cloud (infrastructure|engineer)", "network", "solutions engineer", "director", "vp", "manager"]
+  # Your skills: each match in a posting raises its fit score.
+  stack: ["react", "next.js", "nextjs", "typescript", "javascript", "node", "python", "fastapi", "django",
+          "flask", "llm", "openai", "gpt", "claude", "langchain", "langgraph", "rag", "agent", "ai",
+          "full-stack", "full stack", "fullstack", "postgres", "mongodb", "aws", "docker", "voice",
+          "automation", "tailwind", "saas"]
+  # Location words that mean "open to you". Add your own country / region / time zone words,
+  # e.g. india, apac, ist, latam, europe.
+  open_to: ["worldwide", "anywhere", "global", "remote (global)", "all countries", "any location"]
+  # Regions that exclude you: postings limited to these (and not also open_to) are skipped.
+  # Remove the ones you live in.
+  blocked_regions: ["us", "u.s.", "usa", "united states", "canada", "north america", "americas", "amer",
+                    "latam", "brazil", "mexico", "europe", "european", "eu", "emea", "cet", "cest", "gmt",
+                    "uk", "germany", "poland", "romania", "spain", "france", "ireland", "netherlands",
+                    "portugal", "residents", "select countries", "eastern", "central", "pacific", "est", "pst"]
+  # The AI writer (Claude Code in headless mode by default). It reads prompts/job-outreach.md.
+  # It reads untrusted job posts and web pages, so its tools are limited: it can read and research,
+  # and it can only write inside data/jobs/.
+  writer:
+    command: "claude"
+    allowed_tools: ["Read", "Glob", "Grep", "WebFetch", "WebSearch", "Write(data/jobs/**)"]
+    timeout_minutes: 60        # stop the writer if it runs longer than this

@@ -1,0 +1,16 @@
+# One Google Maps search per line: niche + area works best.
+# `openprospect init` copies this file to config/queries.txt (git-ignored); edit that copy.
+#
+# Each line is scraped once (OpenProspect remembers what it has done), so keep adding lines
+# whenever you want more leads. When this list runs out, searches are generated from
+# scrape.auto_queries in settings.yaml. High-value niches score higher automatically.
+dentist in Austin TX
+med spa in Scottsdale AZ
+personal injury lawyer in Tampa FL
+roofing contractor in Denver CO
+real estate agent in Nashville TN
+orthodontist in Manchester UK
+interior designer in Bristol UK
+physiotherapy clinic in Leeds UK
+cosmetic dentist in Melbourne Australia
+boutique hotel in Brisbane Australia

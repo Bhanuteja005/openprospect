@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas (Discussions)
+    url: https://github.com/Bhanuteja005/openprospect/discussions
+    about: Ask how to set something up, share results, or discuss ideas before opening an issue.
+  - name: Documentation
+    url: https://github.com/Bhanuteja005/openprospect/tree/main/docs
+    about: Getting started, configuration, deliverability and troubleshooting guides.
